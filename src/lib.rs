@@ -9,7 +9,7 @@ pub struct Config {
 impl Config {
     pub fn build(args: &[String]) -> Result<Config, &'static str> {
         if args.len() < 3 {
-            return Err("Not enough arguments!")
+            return Err("Not enough arguments!!")
         }
 
         // Clone is less efficient than using references, but it doesn't
