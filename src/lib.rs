@@ -1,6 +1,7 @@
 use std::error::Error;
 use std::fs;
 use std::env;
+use std::env::Args;
 
 pub struct Config {
     query: String,
@@ -9,30 +10,35 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn build(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            return Err("Not enough arguments!!");
-        }
+    pub fn build(
+        mut args: impl Iterator<Item = String>,
+    ) -> Result<Config, &'static str> {
+        args.next(); // First arg is the name of the program, so we are skipping it.
 
-        Ok(Config {
-            // Clone is less efficient than using references, but it doesn't
-            // really matter in this instance since it only happens once per run, and it's simple.
-            query: args[1].clone(),
-            path: args[2].clone(),
-            case_insensitive: env::var("CASE_INSENSITIVE").is_ok()
+        let query = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get a query string :("),
+        };
+
+        let path = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get a path :((")
+        };
+
+        let case_insensitive = env::var("CASE_INSENSITIVE").is_ok();
+
+        Ok( Config {
+            query,
+            path,
+            case_insensitive
         })
     }
 }
 
 pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
-    let mut result = Vec::new();
-    for line in contents.lines() {
-        if line.contains(query) {
-            result.push(line);
-        }
-    }
-
-    result
+    contents.lines()
+        .filter(|line| {line.contains(query)})
+        .collect()
 }
 
 pub fn search_case_insensitive<'a>(
@@ -40,15 +46,10 @@ pub fn search_case_insensitive<'a>(
     contents: &'a str,
 ) -> Vec<&'a str> {
     let query = query.to_lowercase();
-    let mut results = Vec::new();
 
-    for line in contents.lines() {
-        if line.to_lowercase().contains(&query) {
-            results.push(line);
-        }
-    }
-
-    results
+    contents.to_lowercase().lines()
+        .filter(|line|{line.contains(query)})
+        .collect()
 }
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
