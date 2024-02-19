@@ -1,7 +1,6 @@
 use std::error::Error;
 use std::fs;
 use std::env;
-use std::env::Args;
 
 pub struct Config {
     query: String,
@@ -45,10 +44,9 @@ pub fn search_case_insensitive<'a>(
     query: &str,
     contents: &'a str,
 ) -> Vec<&'a str> {
-    let query = query.to_lowercase();
-
-    contents.to_lowercase().lines()
-        .filter(|line|{line.contains(query)})
+    contents
+        .lines()
+        .filter(|line| {line.to_lowercase().contains(&query.to_lowercase()[..])} )
         .collect()
 }
 
